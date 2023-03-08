@@ -133,14 +133,22 @@ def build_model(base_model):
     # Flatten the output of the base model
     model.add(Flatten())
 
+    # Calculate the number of units for the first dense layer
+    flatten_units = int(np.prod(base_model.output_shape[1:]))
+    first_dense_units = int(flatten_units / 2)
+
+    # Define the number of dense layers and their units
+    num_dense_layers = 4
+    dense_units = [first_dense_units // (2 ** i) for i in range(num_dense_layers)]
+
     # Add dense layers with dropout and L2 regularization
-    model.add(Dense(512, activation='relu', kernel_regularizer=l2(0.01)))
-    model.add(Dense(256, activation='relu', kernel_regularizer=l2(0.01)))
-    model.add(Dense(128, activation='relu', kernel_regularizer=l2(0.01)))
-    model.add(Dense(64, activation='relu', kernel_regularizer=l2(0.01)))
+    for i in range(num_dense_layers):
+        model.add(Dense(dense_units[i], activation='relu', kernel_regularizer=l2(0.01)))
+
     model.add(Dense(1, activation='sigmoid'))
 
     return model
+
 
 def save_model_summary(model, filename):
 
@@ -277,7 +285,7 @@ batch_size = 4
 base_model = load_base_model_EfficientNetB7()
 model = build_model(base_model)
 save_model_summary(model,'model_summary.txt')
-plot_model_architecture(model)
+#plot_model_architecture(model)
 model = compile_model(model)
 
 

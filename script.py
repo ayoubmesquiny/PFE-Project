@@ -1,5 +1,6 @@
 import os
 import seaborn as sns
+import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from keras.preprocessing.image import ImageDataGenerator
@@ -81,6 +82,7 @@ def load_base_model_ResNet50():
         layer.trainable = False
 
     return base_model
+
 def load_base_model_VGG16():
     # Load the pre-trained model
     base_model = VGG16(
@@ -204,7 +206,6 @@ def train_model(model, train_data, test_data, epochs, early_stop_patience):
     early_stop_loss = EarlyStopping(monitor='val_loss', patience=early_stop_patience)
     early_stop_acc = EarlyStopping(monitor='val_accuracy', patience=early_stop_patience)
 
-
     # Train the model
     history = model.fit(
         train_data, 
@@ -273,21 +274,25 @@ img_height = 224
 batch_size = 4
 
 
-base_model = load_base_model()
+base_model = load_base_model_EfficientNetB7()
 model = build_model(base_model)
 save_model_summary(model,'model_summary.txt')
 plot_model_architecture(model)
 model = compile_model(model)
+
+
+train_data, test_data =load_data(img_width, img_height, batch_size)
+history = train_model(model, train_data, test_data, epochs=100, early_stop_patience=10)
+
+
 # Predict the classes for the validation data
 y_pred = model.predict(test_data)
 y_pred_classes = np.argmax(y_pred, axis=1)
-
 # Get the true classes for the validation data
 y_true = test_data.classes
-
 # Plot and save the confusion matrix
 plot_confusion_matrix(y_true, y_pred_classes)
-train_data, test_data =load_data(img_width, img_height, batch_size)
-history = train_model(model, train_data, test_data, epochs=100, early_stop_patience=10)
+
+
 plot_training_loss(history)
 plot_training_accuracy(history)
